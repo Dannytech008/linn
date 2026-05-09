@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To My Bestie Linn | Forever</title>
+    <style>
+        :root {
+            --primary-pink: #ffafbd;
+            --deep-purple: #6c5ce7;
+            --gold: #d4af37;
+            --glass: rgba(255, 255, 255, 0.15);
+            --text-color: #fff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Georgia', serif;
+        }
+
+        body {
+            background: #000;
+            overflow-x: hidden;
+            color: var(--text-color);
+            min-height: 100vh;
+            min-height: 100svh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        /* Fullscreen Slideshow Background */
+        .slideshow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            filter: blur(8px) brightness(0.5);
+            background: radial-gradient(circle at top, rgba(255, 175, 189, 0.25), rgba(108, 92, 231, 0.18), rgba(6, 10, 24, 0.95));
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+        }
+
+        .slide.hero-photo {
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center top;
+        }
+
+        .slide.active { opacity: 1; }
+
+        /* Floating Particles Canvas */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Background Music Control */
+        .music-player {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+
+        /* 3D Book Container */
+        .book-container {
+            perspective: 1500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 30px;
+            width: 100%;
+        }
+
+        .book {
+            width: 350px;
+            height: 500px;
+            position: relative;
+            transition: transform 1s;
+            transform-style: preserve-3d;
+        }
+
+        .page {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 5px 15px 15px 5px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            transform-origin: left;
+            transform-style: preserve-3d;
+            transition: transform 1s cubic-bezier(0.645, 0.045, 0.355, 1);
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            user-select: none;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .page.flipped {
+            transform: rotateY(-180deg);
+        }
+
+        .front, .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .back { transform: rotateY(180deg); }
+
+        /* Typography & Effects */
+        h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(to right, #fff, var(--primary-pink), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(255,175,189,0.5);
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #eee;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        h1, p {
+            width: 100%;
+        }
+
+        .photo-frame {
+            width: 80%;
+            height: 180px;
+            border: 3px solid var(--gold);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 15px var(--gold);
+            background: #222;
+        }
+
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .photo-frame:hover img { transform: scale(1.1); }
+
+        /* Buttons */
+        .btn-open {
+            padding: 12px 35px;
+            background: linear-gradient(45deg, var(--deep-purple), var(--primary-pink));
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(108, 92, 231, 0.5);
+            transition: 0.3s;
+        }
+
+        .btn-open:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px var(--primary-pink);
+        }
+
+        .front > :not(.photo-frame),
+        .back > :not(.photo-frame) {
+            max-width: 100%;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .music-player {
+                top: 12px;
+                right: 12px;
+                padding: 8px 14px;
+                font-size: 0.85rem;
+            }
+
+            .book-container {
+                gap: 14px;
+            }
+
+            .book {
+                width: min(92vw, 320px);
+                height: min(74svh, 430px);
+            }
+
+            .page {
+                padding: 16px;
+            }
+
+            .front, .back {
+                padding: 10px;
+            }
+
+            .photo-frame {
+                width: 90%;
+                height: 125px;
+            }
+
+            h1 { font-size: 1.45rem; margin-bottom: 10px; }
+
+            p { font-size: 0.9rem; line-height: 1.45; }
+
+            .front > p:nth-of-type(2) {
+                margin-top: 6px;
+            }
+
+            .btn-open {
+                padding: 10px 24px;
+                font-size: 0.98rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Use local birthday audio file (will loop until site closed) -->
+    <audio id="bgMusic" src="Happy Birthday Song!!! - Happy Birthday.mp3" loop preload="auto"></audio>
+
+    <div class="music-player" onclick="toggleMusic()">
+        <span id="musicStatus">Play Birthday Song 🎂 ❤️</span>
+    </div>
+
+    <!-- Background Slideshow -->
+    <div class="slideshow">
+        <div class="slide active hero-photo" style="background-image: url('WhatsApp%20Image%202026-05-10%20at%2001.07.33.jpeg')"></div>
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80')"></div>
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1920&q=80')"></div>
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=3840&q=80')"></div>
+    </div>
+
+    <canvas id="particleCanvas"></canvas>
+
+    <div class="book-container">
+        <div class="book" id="book">
+            
+            <!-- PAGE 1: WELCOME -->
+            <div class="page" id="p1" onclick="flipPage(1)">
+                <div class="front">
+                    <div class="photo-frame"><img src="WhatsApp%20Image%202026-05-10%20at%2001.07.33.jpeg" alt="Linn" style="object-position: center 12%;"></div>
+                    <h1>To My Bestie Linn ❤️</h1>
+                    <p style="margin-top:8px; font-size:0.9rem; color: #ffe8d6;">Your first digital birthday card, created with love just for you by Danny ❤️</p>
+                    <p>Welcome to a small corner of the internet made just for you. Happy Birthday, beautiful. ✨❤️</p>
+                    <p style="margin-top:20px; font-size: 0.8rem;">(Click to open)</p>
+                </div>
+                <div class="back">
+                    <h1>Our Bond</h1>
+                    <p>They say best friends are the siblings we choose for ourselves. Looking at us, I know I chose the very best. ❤️❤️</p>
+                </div>
+            </div>
+
+            <!-- PAGE 2: APPRECIATION -->
+            <div class="page" id="p2" onclick="flipPage(2)">
+                <div class="front">
+                    <h1>Appreciation ❤️</h1>
+                    <p>Thank you for the endless laughter, the late-night talks, and for being the anchor when things got rough. You make the world glow brighter just by being in it. 🌸❤️</p>
+                    <div class="photo-frame" style="margin-top:20px;"><img src="WhatsApp%20Image%202026-05-10%20at%2001.07.33%20%284%29.jpeg" alt="Memories"></div>
+                </div>
+                <div class="back">
+                    <h1>Sweet Memories</h1>
+                    <p id="typewriter"></p>
+                </div>
+            </div>
+
+            <!-- PAGE 3: EMOTIONAL -->
+            <div class="page" id="p3" onclick="flipPage(3)">
+                <div class="front">
+                    <h1>Under the Stars ❤️</h1>
+                    <p>If I could give you the moon, I would. But for now, I give you my promise that I'll always be here, cheering for you in every chapter of your life. 🌟❤️</p>
+                </div>
+                <div class="back">
+                    <h1>Final Thoughts ❤️</h1>
+                    <p>You are more than a friend; you are a part of my soul. Stay as magical as you are today, Linn. ❤️❤️</p>
+                </div>
+            </div>
+
+        </div>
+        <button class="btn-open" onclick="resetBook()">Close Book ❤️</button>
+    </div>
+
+    <script>
+        // Page Flipping Logic
+        let currentZ = 1;
+        function flipPage(num) {
+            const page = document.getElementById('p' + num);
+            page.classList.toggle('flipped');
+            
+            if(page.classList.contains('flipped')) {
+                currentZ++;
+                page.style.zIndex = currentZ;
+            } else {
+                currentZ--;
+                page.style.zIndex = currentZ;
+            }
+
+            if(num === 2) startTypewriter();
+        }
+
+        function resetBook() {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach((p, index) => {
+                p.classList.remove('flipped');
+                p.style.zIndex = pages.length - index;
+            });
+            currentZ = pages.length;
+        }
+
+        // Typewriter Effect
+        function startTypewriter() {
+            const text = "Every moment with you is a memory I treasure. From the silly jokes to the deep heart-to-hearts... I love you, Bestie! ✨";
+            const element = document.getElementById('typewriter');
+            element.innerHTML = "";
+            let i = 0;
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, 50);
+                }
+            }
+            type();
+        }
+
+        // Local audio toggle
+        document.querySelectorAll('.page').forEach((page, index, pages) => {
+            page.style.zIndex = pages.length - index;
+        });
+
+        const music = document.getElementById('bgMusic');
+        const statusEl = document.getElementById('musicStatus');
+
+        // Ensure loop is on and preload ready
+        if (music) {
+            music.loop = true;
+            music.preload = 'auto';
+        }
+
+        function toggleMusic() {
+            if (!music) return;
+            if (music.paused) {
+                music.play().then(() => {
+                    statusEl.innerText = 'Pause Birthday Song ⏸️';
+                }).catch(() => {
+                    statusEl.innerText = 'Play Birthday Song 🎂';
+                });
+            } else {
+                music.pause();
+                statusEl.innerText = 'Play Birthday Song 🎂';
+            }
+        }
+
+        window.addEventListener('beforeunload', () => {
+            if (music && !music.paused) {
+                music.pause();
+                music.currentTime = 0;
+            }
+        });
+
+        // Particle System
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 - 0.5;
+                this.color = `rgba(255, ${Math.random() * 100 + 150}, ${Math.random() * 100 + 150}, 0.7)`;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.size > 0.2) this.size -= 0.01;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function handleParticles() {
+            if (particles.length < 100) particles.push(new Particle());
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].size <= 0.2) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            handleParticles();
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Slideshow Logic
+        let slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+        setInterval(() => {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }, 5000);
+    </script>
+</body>
+</html>
